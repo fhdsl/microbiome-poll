@@ -4,4 +4,4 @@ A [Genomic Data Science Community Network (GDSCN)](https://gdscn.org) Microbiome
 
 The goal of this project was to better understand barriers faced by faculty at under-resourced institutions. Specifically, we investigated challenges in microbiome education.
 
-Get in touch with @avahoffman for more info.
+Get in touch with [@avahoffman](https://github.com/avahoffman) for more info.
