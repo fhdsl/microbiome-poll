@@ -111,11 +111,14 @@ clean_types_dat <-
   mutate(research_type = case_when(r1 | r2 | masters ~ TRUE, TRUE ~ FALSE))
 
 # Make a column for MSI institutions
-# QUESTION: Include Community Colleges?
+# QUESTION: Include Community Colleges? See below
 clean_types_dat <-
   clean_types_dat %>%
   mutate(msi_type = case_when(hbcu | hsi | tcu | nasnti | aanapisi | other_uri ~ TRUE, 
                               TRUE ~ FALSE))
+
+# Check if there's a lot of overlap for CCs and MSIs
+clean_types_dat %>% filter(cc & !msi_type) # Looks like it doesn't make a difference, since all CCs are also MSIs..
 ```
 
 ## Plotting
