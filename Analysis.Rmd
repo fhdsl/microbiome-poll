@@ -1,0 +1,251 @@
+---
+title: "Microbiome Education Poll Data Analysis"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r}
+library(tidyverse) # Easily Install and Load the 'Tidyverse' CRAN v2.0.0
+library(googlesheets4) # Access Google Sheets using the Sheets API V4 CRAN v1.1.1
+```
+
+## Authenticate
+
+```{r}
+# Once set up, you can automate this process by passing your email
+gs4_auth(email = TRUE)
+```
+
+## Reading data 
+
+```{r}
+sheet_url <- 
+  "https://docs.google.com/spreadsheets/d/1ECTBodmWRzbeCMSQROMJYh5H-2Tw6fFxdzFG7AShybg/edit?resourcekey=&gid=665284569#gid=665284569"
+sheet_dat <- read_sheet(sheet_url)
+```
+
+## Clean data
+
+```{r}
+# Make column names simpler
+clean_names_dat <- sheet_dat %>%
+  rename(
+    familiar = 2,
+    done_research = 3,
+    offer_courses = 4,
+    want_collab = 5,
+    helps_students = 6,
+    self_confidence = 7,
+    dev_opportunities = 8,
+    comp_access = 9,
+    lab_access = 10,
+    time_financial = 11,
+    materials_access = 12,
+    course_freedom = 13,
+    student_interest = 14,
+    barriers = 15,
+    thoughts = 16,
+    institution_type = 17,
+    ammend = 18
+  )
+
+
+# Make cols true or false where appropriate
+clean_TF_dat <- clean_names_dat %>%
+  mutate(done_research = case_when(
+    done_research == "No" ~ FALSE,
+    done_research == "Yes" ~ TRUE,
+    TRUE ~ NA
+  )) %>%
+  mutate(offer_courses = case_when(
+    offer_courses == "No" ~ FALSE,
+    offer_courses == "Yes" ~ TRUE,
+    TRUE ~ NA
+  ))
+
+# Function to clean up institution types and one-hot encode
+make_inst_categories <- function(data, newcol, string) {
+  return(data %>%
+           mutate({{newcol}} := case_when(
+             str_detect(institution_type, string) ~ TRUE, TRUE ~ FALSE
+           )))
+}
+
+# Clean institution types
+clean_types_dat <-
+  clean_TF_dat %>%
+  make_inst_categories("r1", "Doctoral Universities – Very high research activity") %>%
+  make_inst_categories("r2", "Doctoral Universities – High research activity") %>%
+  make_inst_categories("masters", "Master’s College or University") %>%
+  make_inst_categories("pui", "Primarily Undergraduate Institution") %>%
+  make_inst_categories("cc", "Community College") %>%
+  make_inst_categories("hbcu", "Historically Black College or University") %>%
+  make_inst_categories("hsi", "Hispanic Serving Institution") %>%
+  make_inst_categories("tcu", "Tribal College or University") %>%
+  make_inst_categories("nasnti", "Native American-Serving, Nontribal Institutions") %>%
+  make_inst_categories("aanapisi",
+                       "Asian American and Native American Pacific Islander-Serving Institution") %>%
+  make_inst_categories("other_uri", "Other under-resourced institution") %>%
+  make_inst_categories("none_type", "None of these")
+
+# Make a small manual adjustment (someone emailed about a response correction)
+clean_types_dat <-
+  clean_types_dat %>%
+  mutate(hsi = case_when(
+    ammend == "Emailed to say they meant to also select HSI" ~ TRUE,
+    TRUE ~ hsi
+  ))
+
+# Check if there's a lot of overlap for research institutions and PUIs
+clean_types_dat %>% filter(pui & masters) # a few
+clean_types_dat %>% filter(pui & r2) # one
+clean_types_dat %>% filter(pui & r1) # none
+
+# Make a column for "research" institutions
+clean_types_dat <-
+  clean_types_dat %>%
+  mutate(research_type = case_when(r1 | r2 | masters ~ TRUE, TRUE ~ FALSE))
+
+# Make a column for MSI institutions
+# QUESTION: Include Community Colleges?
+clean_types_dat <-
+  clean_types_dat %>%
+  mutate(msi_type = case_when(hbcu | hsi | tcu | nasnti | aanapisi | other_uri ~ TRUE, 
+                              TRUE ~ FALSE))
+```
+
+## Plotting
+
+```{r}
+do_col_plot <- function(research_or_msi, y_attribute) {
+  gg_out <-
+    clean_types_dat %>%
+    group_by(!!sym(research_or_msi)) %>%
+    summarize(mean = mean(!!sym(y_attribute), na.rm = T),
+              sd = sd(!!sym(y_attribute), na.rm = T)) %>%
+    ggplot(aes(x = !!sym(research_or_msi), y = mean)) +
+    geom_col() +
+    geom_errorbar(aes(
+      ymin = mean - sd,
+      ymax = mean + sd,
+      width = 0.4
+    )) +
+    labs(x = NULL)
+  
+  if (research_or_msi == "msi_type") {
+    gg_out <- gg_out + scale_x_discrete(breaks = c("FALSE", "TRUE"),
+                                        labels = c("Non-MSI", "MSI"))
+  }
+  if (research_or_msi == "research_type") {
+    gg_out <- gg_out + scale_x_discrete(
+      breaks = c("FALSE", "TRUE"),
+      labels = c(
+        "Primarily Undergraduate\n Institution",
+        "Graduate Research\n Institution"
+      )
+    )
+  }
+  
+  return(gg_out)
+}
+
+do_col_plot("research_type", "familiar")
+do_col_plot("msi_type", "familiar")
+
+do_col_plot("research_type", "done_research")
+do_col_plot("msi_type", "done_research")
+
+do_col_plot("research_type", "offer_courses")
+do_col_plot("msi_type", "offer_courses")
+
+do_col_plot("research_type", "want_collab")
+do_col_plot("msi_type", "want_collab")
+
+do_col_plot("research_type", "helps_students")
+do_col_plot("msi_type", "helps_students")
+
+# challenges
+
+do_col_plot("research_type", "self_confidence")
+do_col_plot("msi_type", "self_confidence")
+
+do_col_plot("research_type", "dev_opportunities")
+do_col_plot("msi_type", "dev_opportunities")
+
+do_col_plot("research_type", "comp_access")
+do_col_plot("msi_type", "comp_access")
+
+do_col_plot("research_type", "lab_access")
+do_col_plot("msi_type", "lab_access")
+
+do_col_plot("research_type", "time_financial")
+do_col_plot("msi_type", "time_financial")
+
+do_col_plot("research_type", "materials_access")
+do_col_plot("msi_type", "materials_access")
+
+do_col_plot("research_type", "course_freedom")
+do_col_plot("msi_type", "course_freedom")
+
+do_col_plot("research_type", "student_interest")
+do_col_plot("msi_type", "student_interest")
+```
+
+```{r}
+do_challenge_plot <- function(research_or_msi) {
+  gg_out <-
+    clean_types_dat %>%
+    select(7:14, !!sym(research_or_msi)) %>%
+    pivot_longer(!c(!!sym(research_or_msi))) %>%
+    group_by(!!sym(research_or_msi), name) %>%
+    summarize(mean = mean(value), sd = sd(value)) %>%
+    ggplot(aes(
+      x = name,
+      y = mean,
+      fill = !!sym(research_or_msi),
+      group = !!sym(research_or_msi)
+    )) +
+    geom_col(position = position_dodge(width = 0.9)) +
+    geom_errorbar(position = position_dodge(width = 0.9),
+                  aes(
+                    ymin = mean - sd,
+                    ymax = mean + sd,
+                    width = 0.4
+                  )) +
+    labs(x = NULL)
+  
+  if (research_or_msi == "msi_type") {
+    gg_out <- gg_out + scale_fill_viridis_d(breaks = c("FALSE", "TRUE"),
+                                            labels = c("Non-MSI", "MSI"))
+  }
+  if (research_or_msi == "research_type") {
+    gg_out <- gg_out + scale_fill_viridis_d(
+      breaks = c("FALSE", "TRUE"),
+      labels = c(
+        "Primarily Undergraduate\n Institution",
+        "Graduate Research\n Institution"
+      )
+    )
+  }
+  #
+  return(gg_out)
+}
+
+do_challenge_plot("research_type")
+do_challenge_plot("msi_type")
+```
+
+## Statistics
+
+```{r}
+stats_dat <-
+  clean_types_dat %>%
+  select(7:14, research_type, msi_type) %>%
+  pivot_longer(!c(research_type, msi_type))
+
+summary(glm(data = stats_dat, value ~ name + research_type + msi_type))
+```
