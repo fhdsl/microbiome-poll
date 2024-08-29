@@ -3,34 +3,30 @@ title: "Microbiome Education Poll Data Analysis"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
-## Load packages
+<!-- Setting up and cleaning the data in the chunk below -->
 
 ```{r}
 library(tidyverse) # Easily Install and Load the 'Tidyverse' CRAN v2.0.0
 library(googlesheets4) # Access Google Sheets using the Sheets API V4 CRAN v1.1.1
-```
+library(magrittr) # A Forward-Pipe Operator for R CRAN v2.0.3 
+library(patchwork) # The Composer of Plots CRAN v1.2.0 
+library(tidytext) # Text Mining using 'dplyr', 'ggplot2', and Other Tidy Tools CRAN v0.4.2
+library(wordcloud) # Word Clouds CRAN v2.6
+library(SnowballC) # Snowball Stemmers Based on the C 'libstemmer' UTF-8 Library CRAN v0.7.1 # Snowball Stemmers Based on the C 'libstemmer' UTF-8 Library CRAN v0.7.1 
+library(scales) # Scale Functions for Visualization CRAN v1.3.0 # Scale Functions for Visualization CRAN v1.3.0 
 
-## Authenticate
-
-```{r}
 # Once set up, you can automate this process by passing your email
 gs4_auth(email = TRUE)
-```
 
-## Reading data 
-
-```{r}
+# Read in the data from Google Sheets
 sheet_url <- 
   "https://docs.google.com/spreadsheets/d/1ECTBodmWRzbeCMSQROMJYh5H-2Tw6fFxdzFG7AShybg/edit?resourcekey=&gid=665284569#gid=665284569"
 sheet_dat <- read_sheet(sheet_url)
-```
 
-## Clean data
-
-```{r}
+# Clean data ---
 # Make column names simpler
 clean_names_dat <- sheet_dat %>%
   rename(
@@ -100,149 +96,291 @@ clean_types_dat <-
     TRUE ~ hsi
   ))
 
-# Check if there's a lot of overlap for research institutions and PUIs
-clean_types_dat %>% filter(pui & masters) # a few
-clean_types_dat %>% filter(pui & r2) # one
-clean_types_dat %>% filter(pui & r1) # none
-
 # Make a column for "research" institutions
 clean_types_dat <-
   clean_types_dat %>%
   mutate(research_type = case_when(r1 | r2 | masters ~ TRUE, TRUE ~ FALSE))
 
 # Make a column for MSI institutions
-# QUESTION: Include Community Colleges? See below
+# QUESTION: Include Community Colleges in MSIs? See below
 clean_types_dat <-
   clean_types_dat %>%
-  mutate(msi_type = case_when(hbcu | hsi | tcu | nasnti | aanapisi | other_uri ~ TRUE, 
+  mutate(msi_type = case_when(hbcu | hsi | tcu | nasnti | aanapisi | other_uri ~ TRUE,
                               TRUE ~ FALSE))
-
-# Check if there's a lot of overlap for CCs and MSIs
-clean_types_dat %>% filter(cc & !msi_type) # Looks like it doesn't make a difference, since all CCs are also MSIs..
 ```
 
-## Plotting
+<!-- Gut check below -->
+
+```{r eval=FALSE}
+# Check if there's a lot of overlap for research institutions and PUIs
+clean_types_dat %>% filter(pui & masters) # a few
+clean_types_dat %>% filter(pui & r2) # one
+clean_types_dat %>% filter(pui & r1) # none
+
+# Is there a lot of overlap for CCs and MSIs?
+clean_types_dat %>% filter(cc & !msi_type) # ~7 responses
+```
+
+### Response Rate
 
 ```{r}
-do_col_plot <- function(research_or_msi, y_attribute) {
-  gg_out <-
+sample_size <- nrow(clean_types_dat)
+total_research_pool_n <- 291
+response_rate <- round(sample_size / total_research_pool_n * 100, 2)
+
+# Create breakdown tables of institution types
+rsch_breakdown <-
+  clean_types_dat %>% select(r1:cc) %>% rename(
+    `R1 institution` = r1,
+    `R2 institution` = r2,
+    `Master's degree granting institution` = masters,
+    `Primarily undergraduate institution` = pui,
+    `Community college` = cc
+  ) %>% 
+  pivot_longer(everything()) %>% 
+  filter(value) %>% 
+  group_by(name) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  mutate(percent = paste0(round(n / sample_size * 100),"%"))
+
+msi_breakdown <-
+  clean_types_dat %>% 
+  select(hbcu:other_uri) %>% 
+  rename(
+    `Hispanic Serving Institution` = hsi,
+    `Historically Black College or University` = hbcu,
+    `Other under-resourced institution` = other_uri,
+    `Asian American and Native American Pacific Islander Serving Institution` = aanapisi,
+    `Tribal College or University` = tcu
+  ) %>% 
+  pivot_longer(everything()) %>% 
+  filter(value) %>% 
+  group_by(name) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  mutate(percent = paste0(round(n / sample_size * 100),"%"))
+
+```
+
+The poll had `r sample_size` respondents, for a response rate of `r response_rate`%.
+
+### Institution Types
+
+```{r}
+kableExtra::kable(rsch_breakdown, align = "lrr") %>%
+  kableExtra::kable_styling(full_width = F, position = "left")
+kableExtra::kable(msi_breakdown, align = "lrr") %>%
+  kableExtra::kable_styling(full_width = F, position = "left")
+```
+
+### General Questions
+
+```{r}
+# Function to create side by side column plots
+do_col_plot <- function(y_attribute) {
+  gg_rsch <-
     clean_types_dat %>%
-    group_by(!!sym(research_or_msi)) %>%
+    group_by(research_type) %>%
     summarize(mean = mean(!!sym(y_attribute), na.rm = T),
               sd = sd(!!sym(y_attribute), na.rm = T)) %>%
-    ggplot(aes(x = !!sym(research_or_msi), y = mean)) +
-    geom_col() +
-    geom_errorbar(aes(
-      ymin = mean - sd,
-      ymax = mean + sd,
-      width = 0.4
-    )) +
-    labs(x = NULL)
-  
-  if (research_or_msi == "msi_type") {
-    gg_out <- gg_out + scale_x_discrete(breaks = c("FALSE", "TRUE"),
-                                        labels = c("Non-MSI", "MSI"))
-  }
-  if (research_or_msi == "research_type") {
-    gg_out <- gg_out + scale_x_discrete(
+    ggplot(aes(x = research_type, y = mean)) +
+    geom_col(fill = c("#21918c", "#3b528b")) +
+    scale_x_discrete(
       breaks = c("FALSE", "TRUE"),
       labels = c(
         "Primarily Undergraduate\n Institution",
         "Graduate Research\n Institution"
       )
     )
-  }
   
-  return(gg_out)
+  gg_msi <-
+    clean_types_dat %>%
+    group_by(msi_type) %>%
+    summarize(mean = mean(!!sym(y_attribute), na.rm = T),
+              sd = sd(!!sym(y_attribute), na.rm = T)) %>%
+    ggplot(aes(x = msi_type, y = mean)) +
+    geom_col(fill = c("#fde725", "#5ec962")) +
+    scale_x_discrete(breaks = c("FALSE", "TRUE"),
+                     labels = c("Non-MSI", "MSI"))
+  
+  return(
+    gg_rsch + gg_msi &
+      theme(legend.position = "none") &
+      geom_errorbar(aes(
+        ymin = mean - sd,
+        ymax = mean + sd,
+        width = 0.4
+      )) &
+      labs(x = NULL) &
+      theme_minimal()
+  )
+  
 }
-
-do_col_plot("research_type", "familiar")
-do_col_plot("msi_type", "familiar")
-
-do_col_plot("research_type", "done_research")
-do_col_plot("msi_type", "done_research")
-
-do_col_plot("research_type", "offer_courses")
-do_col_plot("msi_type", "offer_courses")
-
-do_col_plot("research_type", "want_collab")
-do_col_plot("msi_type", "want_collab")
-
-do_col_plot("research_type", "helps_students")
-do_col_plot("msi_type", "helps_students")
-
-# challenges
-
-do_col_plot("research_type", "self_confidence")
-do_col_plot("msi_type", "self_confidence")
-
-do_col_plot("research_type", "dev_opportunities")
-do_col_plot("msi_type", "dev_opportunities")
-
-do_col_plot("research_type", "comp_access")
-do_col_plot("msi_type", "comp_access")
-
-do_col_plot("research_type", "lab_access")
-do_col_plot("msi_type", "lab_access")
-
-do_col_plot("research_type", "time_financial")
-do_col_plot("msi_type", "time_financial")
-
-do_col_plot("research_type", "materials_access")
-do_col_plot("msi_type", "materials_access")
-
-do_col_plot("research_type", "course_freedom")
-do_col_plot("msi_type", "course_freedom")
-
-do_col_plot("research_type", "student_interest")
-do_col_plot("msi_type", "student_interest")
 ```
 
+Are you familiar with microbiome research and its potential applications in public health, medicine, the environment, and industry?
+
 ```{r}
-do_challenge_plot <- function(research_or_msi) {
-  gg_out <-
+do_col_plot("familiar") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
+```
+
+Have you conducted microbiome research, previously or currently? (1 = yes)
+
+```{r}
+do_col_plot("done_research") & scale_y_continuous(limits = c(0, 1), oob = scales::oob_squish) 
+```
+
+Do you, or others at your institution, offer specific courses or educational programs for students related to microbiomes? (1 = yes)
+
+```{r}
+do_col_plot("offer_courses") & scale_y_continuous(limits = c(0, 1), oob = scales::oob_squish)
+```
+
+Would you be interested in collaborating with other institutions, organizations, or faculty to enhance microbiome education or research opportunities at your institution?
+
+```{r}
+do_col_plot("want_collab") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
+```
+
+Do you believe that incorporating microbiome topics into the curriculum can provide students with interdisciplinary skills to address real-world problems?
+
+```{r}
+do_col_plot("helps_students") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
+```
+
+### Institutional Challenges
+
+_When implementing or considering implementing a module or course, please indicate the extent of each of the following challenges, where 1 is "not a challenge" and 5 is "a strong challenge"._
+
+Confidence and/or expertise for teaching the material
+
+```{r}
+do_col_plot("self_confidence") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
+```
+
+Opportunities for development and/or access to a community of practice
+
+```{r}
+do_col_plot("dev_opportunities") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
+```
+
+Access to computers and/or computational time
+
+```{r}
+do_col_plot("comp_access") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
+```
+
+Access to laboratory supplies to incorporate wet lab activities
+
+```{r}
+do_col_plot("lab_access") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
+```
+
+Time and/or financial support needed to design and/or implement courses
+
+```{r}
+do_col_plot("time_financial") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
+```
+
+Access to existing course materials
+
+```{r}
+do_col_plot("materials_access") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
+```
+
+Freedom and/or flexibility to implement a course or module of your choosing
+
+```{r}
+do_col_plot("course_freedom") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
+```
+
+Student interest and/or engagement
+
+```{r}
+do_col_plot("student_interest") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
+```
+
+### Institutional Challenges (aggregated)
+
+_When implementing or considering implementing a module or course, please indicate the extent of each of the following challenges, where 1 is "not a challenge" and 5 is "a strong challenge"._
+
+```{r fig.width=10}
+do_challenge_plot <- function() {
+  rsch_dat<-
     clean_types_dat %>%
-    select(7:14, !!sym(research_or_msi)) %>%
-    pivot_longer(!c(!!sym(research_or_msi))) %>%
-    group_by(!!sym(research_or_msi), name) %>%
+    select(7:14, research_type) %>%
+    pivot_longer(!research_type) %>%
+    group_by(research_type, name) %>%
     summarize(mean = mean(value), sd = sd(value)) %>%
+    mutate(type = case_when(
+       !research_type ~ "Primarily Undergraduate Institution",
+        research_type ~ "Graduate Research Institution"
+    ))
+  msi_dat<-
+    clean_types_dat %>%
+    select(7:14, msi_type) %>%
+    pivot_longer(!msi_type) %>%
+    group_by(msi_type, name) %>%
+    summarize(mean = mean(value), sd = sd(value)) %>%
+    mutate(type = case_when(
+       !msi_type ~ "Non-MSI",
+        msi_type ~ "MSI"
+    ))
+  
+  gg_out <-
+    bind_rows(rsch_dat, msi_dat) %>%
+    mutate(type = factor(
+      type,
+      levels = c(
+        "Primarily Undergraduate Institution",
+        "Graduate Research Institution",
+        "Non-MSI",
+        "MSI"
+      )
+    )) %>%
+    mutate(name = case_when(
+      name == "comp_access" ~ "Access to computers and/or\ncomputational time",
+      name == "course_freedom" ~ "Freedom and/or flexibility to implement a\ncourse or module of your choosing",
+      name == "dev_opportunities" ~ "Opportunities for development and/or\naccess to a community of practice",
+      name == "lab_access" ~ "Access to laboratory supplies to\nincorporate wet lab activities",
+      name == "materials_access" ~ "Access to existing course materials",
+      name == "self_confidence" ~ "Confidence and/or expertise for\nteaching the material",
+      name == "student_interest" ~ "Student interest and/or engagement",
+      name == "time_financial" ~ "Time and/or financial support needed to\ndesign and/or implement courses"
+    )
+    ) %>% 
     ggplot(aes(
       x = name,
       y = mean,
-      fill = !!sym(research_or_msi),
-      group = !!sym(research_or_msi)
+      fill = type,
+      group = type
     )) +
     geom_col(position = position_dodge(width = 0.9)) +
+    theme(axis.text.x = element_text(angle = 30)) +
     geom_errorbar(position = position_dodge(width = 0.9),
                   aes(
                     ymin = mean - sd,
                     ymax = mean + sd,
                     width = 0.4
                   )) +
-    labs(x = NULL)
-  
-  if (research_or_msi == "msi_type") {
-    gg_out <- gg_out + scale_fill_viridis_d(breaks = c("FALSE", "TRUE"),
-                                            labels = c("Non-MSI", "MSI"))
-  }
-  if (research_or_msi == "research_type") {
-    gg_out <- gg_out + scale_fill_viridis_d(
-      breaks = c("FALSE", "TRUE"),
-      labels = c(
-        "Primarily Undergraduate\n Institution",
-        "Graduate Research\n Institution"
-      )
-    )
-  }
-  #
+    labs(x = NULL) +
+    scale_fill_manual(values = c("#21918c", "#3b528b", "#fde725", "#5ec962")) +
+    theme_minimal() +
+    theme(legend.title = element_blank(),
+          axis.text.x = element_text(angle = 50, hjust = 1),
+          plot.margin = unit(c(1,1,1,1), "cm"))
   return(gg_out)
 }
 
-do_challenge_plot("research_type")
-do_challenge_plot("msi_type")
+do_challenge_plot()
 ```
 
 ## Statistics
+
+The following is a poisson regression model looking at how research type ("Primarily Undergraduate Institution" vs. "Graduate Research Institution") and is/is not an MSI affect the perception on different barriers to implementing microbiome work. 
+
+Based on the outcome below, there isn't evidence that research type / MSI affects these perceived barriers. However, "Time and/or financial support needed to design and/or implement courses" is the biggest barrier for all institutions.
 
 ```{r}
 stats_dat <-
@@ -250,5 +388,306 @@ stats_dat <-
   select(7:14, research_type, msi_type) %>%
   pivot_longer(!c(research_type, msi_type))
 
-summary(glm(data = stats_dat, value ~ name + research_type + msi_type))
+# mean(stats_dat$value)
+# var(stats_dat$value)
+
+summary(glm(data = stats_dat, value ~ name + research_type + msi_type, family = poisson(link = "log")))
+```
+
+## Free Text Thematic Analysis
+
+```{r}
+words_dat <- clean_types_dat %>%
+  mutate(response_number = row_number())
+```
+
+### Barrier Thematic Analysis
+
+_"Please provide any additional thoughts on barriers you have encountered with microbiome education."_
+
+**Overall Barrier Themes**
+
+There might be some disagreement about what constitutes microbiome education at different institution types. For example, a CURE at a non-research institution might leverage existing data, while a research institution might feel that expensive original data acquisition is required.
+
+* Sequencing was mentioned repeatedly for non-MSIs but not at MSIs
+* Costs were mentioned at research institutions but not at undergraduate institutions.
+* CUREs were mentioned 6 times at non-research MSI institutions, but not at all at research institutions / non-MSI institutions.
+
+**Themes for barriers at MSIs**
+
+1. Curriculum integration and time constraints
+
+* "We are a two-year college offering lower-division undergraduate coursework, so it can be challenging to incorporate advanced topics and areas of active research into the curriculum."
+* "Integrating the topic into existing learning outcomes of a course. For our institution, we won't be able to offer a specific course on microbiome, but I can see several courses into which microbiome lessons can be integrated."
+* "Primarily the time to research it and the availability of teaching resources"
+* "may need some training and lab equipment to conduct such lab module"
+* "Access to researchers with correct expertise and TIME to collaborate"
+* "Computational and statistical expertise to support microbiomes studies is lacking at our institution. We have tried reaching out to computer science and statistics faculty but there has been very limited interest and/or experience in this specific application to microbiomes data."
+
+2. Student engagement and background
+
+* "Student understanding of technologies; lack of resources to incorporate activities in student labs. Lack of student preparedness for lower-level microbiology course."
+* "Students are interested when microbiome research is discussed but often lack knowledge"
+* "Bioinformatic flows are difficult for students to learn. Thus, they become frustrated. Many of my students state they prefer the wet-bench portion of metagenomics."
+* "It is hard to get students excited or engaged in anything. However, students were more interested when they were presented with examples, articles, social media clickbait of how it relates to them and their health."
+
+**Themes for barriers at non-MSIs**
+
+1. Cost barriers for new sequencing
+
+* "Money and time and training are the big three"
+* "Lack of funding for sequencing"
+* "Lack of funds for expensive reagents and whole genome sequencing."
+* "Cost per sample and turnaround time for receiving data if using an external vendor could be barriers for having students do the DNA sequencing for microbial communities in class."
+* "Cost and resources are a really big factors. I can teach all day about the theory behind microbiome concepts and techniques, but doing and practicing the techniques can be quite difficult."
+* "Cost for supplies and sequencing if generating data and updating computers for analysis are both challenges at my institution."
+* "Paying for sequencing and knowing how to do the bioinformatics"
+* "They are listed above - finances and equipment"
+
+2. Instructor skills and confidence
+
+* "My own ignorance and weaknesss is a big roadblock."
+* "Some challenges are library prep and makes sense out [of] .. output."
+* "I would love hands on training and a network. It would give me to confidence I need to create a whole class around it rather than just a module or assignment."
+* "As an instructor, I lack some of the statistical background to explain in detail when community compositions are different. I would love to have (and contribute to) resources available for this."
+* "Paying for sequencing and knowing how to do the bioinformatics"
+
+**Themes for barriers at non-research institutions**
+
+These themes overlap with MSIs (above) including lack of student background, flexibility to implement microbiome content, and time/expertise constraints.
+
+```{r eval = FALSE}
+words_dat %>%
+    rename(text_col = barriers, case_col = research_type) %>%
+    select(response_number, text_col, case_col) %>%
+    unnest_tokens(word, text_col) %>%
+    anti_join(stop_words[stop_words$lexicon == "SMART", ], by = "word") %>%
+    mutate(stem = wordStem(word)) %>%
+    filter(!(word %in% c("na"))) %>%
+    drop_na(word) %>% 
+    count(case_col, word) %>%
+    pivot_wider(names_from = case_col, values_from = n) %>% 
+    filter(is.na(`TRUE`)) %>% 
+    arrange(desc(`FALSE`))
+```
+
+**Themes for barriers at research institutions**
+
+Costs and time, either from the instructor themselves or lack of personnel or collaborators.
+
+### Other Thoughts Thematic Analysis
+
+_"Please provide any additional thoughts on your experience with microbiome education."_
+
+**Overall Barrier Themes**
+
+There were fewer divisions among types of institutions. In general, respondents felt a lot of enthusiasm for the topic and for collaboration. There is some concern around how to implement microbiome content in the classroom, as well as expertise and time to make that happen.
+
+**Other Thoughts Themes at MSIs**
+
+1. Enthusiasm for the topic
+
+* "Very important and ties into many content areas, there are lots of misconceptions on the part of the students."
+* "I do think this is an outstanding topic with tons of potential and it should be part of the articulation agreements."
+* "Microbiome studies are a particularly good subject for learning the interdisciplinary nature of biology and integrating molecular biology, microbiology, ecology and environmental sciences.  It is an area rich in unanswered questions so it is perfect for CURE learning and teaching."
+* "It is a huge passion of mine that I always include in my courses but never as a “module” so I would be very excited to see collaboration"
+* "I do discuss in my courses, and would like to implement it more"                                                               
+
+2. Enthusiasm for collaboration
+
+* "My colleague (a chemist/environmental scientist who studies heavy-metal pollution) and I have been developing a collaboration to study microbes living in mine water drainage remediation systems. We are interested in incorporating this project into our courses."
+* "I am excited to collaborate with researchers and educators at other institutions to receive training/support that will advance microbiome studies at our campus"
+* "The desire is there, finding Microbiome experts has been challenging"                                                          
+
+**Other Thoughts Themes at non-MSIs**
+
+1. Enthusiasm for the topic and partnering with others
+
+* "My Introduction to Microbiology students are very interested in the complexities and presence of microbial communities!  This is very much an interesting and important area of research and I already have plans to start developing a class focused in this direction."
+* "I just briefly do some case studies and discussions about microbiome work, but I would love to do more"
+* "I have been working on a collaborative project with my colleague in environmental to study microbial communities in acid mine drainage remediation systems, which is a project we are interested in building on."
+* "This is a topic that is very important for me to teach and I incorporate it into my nutrition and biodiversity classes. Ideas for ways to teach it are always welcome." 
+* "REMnet and Microbiomes for all has been a big help."
+
+2. More planning is needed in how to integrate microbiome topics appropriately
+
+* "It’s very powerful and interesting, but I believe it is better suited to higher level courses than first -year general biology"
+* "I'm still unsure how to design enduring learning outcomes at the undergrad level regarding microbiomes." 
+* "It is tricky to know how to make space in the curriculum"
+
+3. Lack of time to learn or implement
+
+* "I'd love to jump back into iPython/Jupyter notebooks but that requires time to develop I don't really have in my heavy teaching load position."
+* "time to teach something like R and computing power/software accessibility have prevented me from trying to implement this level of analysis in my classes."
+* "If instructors weren’t trained during grad or post-doc it is harder to find the right place for training"
+
+```{r eval = FALSE}
+words_dat %>%
+    rename(text_col = thoughts, case_col = research_type) %>%
+    select(response_number, text_col, case_col) %>%
+    unnest_tokens(word, text_col) %>%
+    anti_join(stop_words[stop_words$lexicon == "SMART", ], by = "word") %>%
+    mutate(stem = wordStem(word)) %>%
+    filter(!(word %in% c("na"))) %>%
+    drop_na(word) %>% 
+    count(case_col, word) %>%
+    pivot_wider(names_from = case_col, values_from = n) %>% 
+    filter(is.na(`TRUE`)) %>% 
+    arrange(desc(`FALSE`))
+```
+
+### Wordclouds
+
+```{r}
+words_barriers <- words_dat %>%
+  select(response_number, barriers) %>%
+  unnest_tokens(word, barriers)
+words_thoughts <- words_dat %>%
+  select(response_number, thoughts) %>%
+  unnest_tokens(word, thoughts)
+```
+
+_"Please provide any additional thoughts on barriers you have encountered with microbiome education."_
+
+```{r}
+words_barriers %>%
+  anti_join(stop_words) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
+```
+
+_"Please provide any additional thoughts on your experience with microbiome education."_
+
+```{r}
+words_thoughts %>%
+  anti_join(stop_words) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100))
+```
+
+### Word Frequencies: MSIs versus Non-MSIs
+
+```{r}
+make_text_freq <- function(in_df){
+  text_df <- 
+    in_df %>%
+    select(response_number, text_col, case_col) %>%
+    unnest_tokens(word, text_col) %>%
+    anti_join(stop_words[stop_words$lexicon == "SMART", ], by = "word") %>%
+    mutate(stem = wordStem(word)) %>%
+    filter(!(word %in% c("na"))) %>%
+    drop_na(word) %>% 
+    count(case_col, word) %>%
+    group_by(case_col) %>%
+    mutate(proportion = n / sum(n)) %>%
+    select(!n) %>%
+    pivot_wider(names_from = case_col, values_from = proportion)
+  
+  text_df <- text_df[!grepl("\\d", text_df$word), ] # Remove numbers
+  
+  # expect a warning about rows with missing values being removed
+  gg <-
+    ggplot(text_df, aes(
+      x = `TRUE`,
+      y = `FALSE`,
+      color = abs(`FALSE` - `TRUE`)
+    )) +
+    geom_abline(color = "gray20", lty = 2) +
+    geom_jitter(
+      alpha = 0.3,
+      size = 2.5,
+      width = 0.05,
+      height = 0.05
+    ) +
+    theme_minimal() +
+    geom_text(aes(label = word), check_overlap = TRUE) +
+    scale_x_log10(labels = percent_format()) +
+    scale_y_log10(labels = percent_format()) +
+    scale_color_gradient(low = "gray20", high = "#5ec962") +
+    theme(legend.position = "none")
+  
+return(gg)
+}
+```
+
+Below shows the differences between frequency of certain words. Words farther away from the midpoint are more commonly found in that institution type. 
+
+The word pool is the following question.
+
+_"Please provide any additional thoughts on barriers you have encountered with microbiome education."_
+
+```{r}
+words_dat %>%
+  rename(text_col = barriers, case_col = msi_type) %>% make_text_freq() +
+  labs(
+    y = "Not an MSI",
+    x = "MSI"
+  )
+```
+
+The word pool is the following question.
+
+_"Please provide any additional thoughts on your experience with microbiome education."_
+
+```{r}
+words_dat %>%
+  rename(text_col = thoughts, case_col = msi_type) %>% make_text_freq() +
+  labs(
+    y = "Not an MSI",
+    x = "MSI"
+  )
+```
+
+The word pool is both questions above.
+
+```{r}
+words_dat %>%
+  mutate(total_text = paste0(barriers, ". ", thoughts)) %>%
+  rename(text_col = total_text, case_col = msi_type) %>% make_text_freq() +
+  labs(
+    y = "Not an MSI",
+    x = "MSI"
+  )
+```
+
+### Word Frequencies: Graduate institutions vs. undergraduate institutions
+
+Below shows the differences between frequency of certain words. Words farther away from the midpoint are more commonly found in that institution type. 
+
+The word pool is the following question.
+
+_"Please provide any additional thoughts on barriers you have encountered with microbiome education."_
+
+```{r}
+words_dat %>%
+  rename(text_col = barriers, case_col = research_type) %>% make_text_freq() +
+  labs(
+    y = "Undergraduate institution",
+    x = "Graduate institution"
+  )
+```
+
+The word pool is the following question.
+
+_"Please provide any additional thoughts on your experience with microbiome education."_
+
+```{r}
+words_dat %>%
+  rename(text_col = thoughts, case_col = research_type) %>% make_text_freq() +
+  labs(
+    y = "Undergraduate institution",
+    x = "Graduate institution"
+  )
+```
+
+The word pool is both questions above.
+
+```{r}
+words_dat %>%
+  mutate(total_text = paste0(barriers, ". ", thoughts)) %>%
+  rename(text_col = total_text, case_col = research_type) %>% make_text_freq() +
+  labs(
+    y = "Undergraduate institution",
+    x = "Graduate institution"
+  )
 ```
