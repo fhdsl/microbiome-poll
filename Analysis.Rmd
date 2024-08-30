@@ -1,10 +1,23 @@
 ---
 title: "Microbiome Education Poll Data Analysis"
+output:
+  html_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
+
+# About
+
+This poll was launched in May 2024 to better understand microbiome education, specifically focusing on the challenges and opportunities faced by instructors. The purpose of this poll was to gather insights and data that will support our efforts to promote equal access to microbiome training and resources.
+
+The first poll response was collected May 20, 2024. The collection is still ongoing as of 8/30/2024. To protect respondent anonymity, raw data is not yet available until approved by our IRB review.
+
+A blank version of the poll can be viewed [here](https://drive.google.com/file/d/134MgEsKRB3GohHQTUAdQMruNI3yXmIwF/view?usp=drive_link).
+
+# Basic Information
 
 <!-- Setting up and cleaning the data in the chunk below -->
 
@@ -121,7 +134,7 @@ clean_types_dat %>% filter(pui & r1) # none
 clean_types_dat %>% filter(cc & !msi_type) # ~7 responses
 ```
 
-### Response Rate
+## Response Rate
 
 ```{r}
 sample_size <- nrow(clean_types_dat)
@@ -165,7 +178,7 @@ msi_breakdown <-
 
 The poll had `r sample_size` respondents, for a response rate of `r response_rate`%.
 
-### Institution Types
+## Institution Types
 
 ```{r}
 kableExtra::kable(rsch_breakdown, align = "lrr") %>%
@@ -174,7 +187,7 @@ kableExtra::kable(msi_breakdown, align = "lrr") %>%
   kableExtra::kable_styling(full_width = F, position = "left")
 ```
 
-### General Questions
+# Responses: General Poll Questions
 
 ```{r}
 # Function to create side by side column plots
@@ -249,7 +262,11 @@ Do you believe that incorporating microbiome topics into the curriculum can prov
 do_col_plot("helps_students") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
 ```
 
-### Institutional Challenges
+# Responses: Institutional Barriers
+
+## Institutional Barriers (separated)
+
+The following are visualizations of institution types by each barrier. Note that research institution status and MSI status are not mutually exclusive. For example, a research institution could be either non-MSI or MSI.
 
 _When implementing or considering implementing a module or course, please indicate the extent of each of the following challenges, where 1 is "not a challenge" and 5 is "a strong challenge"._
 
@@ -301,7 +318,7 @@ Student interest and/or engagement
 do_col_plot("student_interest") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
-### Institutional Challenges (aggregated)
+## Institutional Barriers (aggregated)
 
 _When implementing or considering implementing a module or course, please indicate the extent of each of the following challenges, where 1 is "not a challenge" and 5 is "a strong challenge"._
 
@@ -376,7 +393,7 @@ do_challenge_plot <- function() {
 do_challenge_plot()
 ```
 
-## Statistics
+# Statistics
 
 The following is a poisson regression model looking at how research type ("Primarily Undergraduate Institution" vs. "Graduate Research Institution") and is/is not an MSI affect the perception on different barriers to implementing microbiome work. 
 
@@ -394,14 +411,16 @@ stats_dat <-
 summary(glm(data = stats_dat, value ~ name + research_type + msi_type, family = poisson(link = "log")))
 ```
 
-## Free Text Thematic Analysis
+# Free Text Thematic Analysis
+
+We used a qualitative research approach called thematic analysis ([Braun and Clarke 2006](https://www.tandfonline.com/doi/abs/10.1191/1478088706QP063OA)) to better understand free text responses. This approach has previously been used to better understand instructor perspectives. For example, it has been used to understand instructor perspectives on the use of LLMs in the classroom ([link](https://arxiv.org/abs/2309.10694)), blended learning ([link](https://onlinelibrary.wiley.com/doi/abs/10.1111/jcal.12578?casa_token=6vdUGgxugZoAAAAA:Wc2cQx7XchX3NTU4fnXGKJjLfIVnFSJTm0UyG8dpD1pXnuICvoK5Bg3GjKdmLHelqp4HIXVws5KHbA)), professional development opportunities ([link](https://link.springer.com/article/10.1007/s12528-018-9194-0)), and threshold concepts ([link](https://doi.org/10.1145/2700513)). It has been used extensively to better understand STEM education ([link](https://link.springer.com/article/10.1186/s43031-024-00106-8), [link](https://link.springer.com/article/10.1186/s40594-017-0062-7), [link](https://link.springer.com/article/10.1007/s41979-023-00103-y)).
 
 ```{r}
 words_dat <- clean_types_dat %>%
   mutate(response_number = row_number())
 ```
 
-### Barrier Thematic Analysis
+## Barrier Thematic Analysis
 
 _"Please provide any additional thoughts on barriers you have encountered with microbiome education."_
 
@@ -475,7 +494,7 @@ words_dat %>%
 
 Costs and time, either from the instructor themselves or lack of personnel or collaborators.
 
-### Other Thoughts Thematic Analysis
+## Other Thoughts Thematic Analysis
 
 _"Please provide any additional thoughts on your experience with microbiome education."_
 
@@ -536,7 +555,7 @@ words_dat %>%
     arrange(desc(`FALSE`))
 ```
 
-### Wordclouds
+## Wordclouds
 
 ```{r}
 words_barriers <- words_dat %>%
@@ -565,7 +584,7 @@ words_thoughts %>%
   with(wordcloud(word, n, max.words = 100))
 ```
 
-### Word Frequencies: MSIs versus Non-MSIs
+## Word Frequencies: MSIs versus Non-MSIs
 
 ```{r}
 make_text_freq <- function(in_df){
@@ -650,7 +669,7 @@ words_dat %>%
   )
 ```
 
-### Word Frequencies: Graduate institutions vs. undergraduate institutions
+## Word Frequencies: Graduate institutions vs. undergraduate institutions
 
 Below shows the differences between frequency of certain words. Words farther away from the midpoint are more commonly found in that institution type. 
 
