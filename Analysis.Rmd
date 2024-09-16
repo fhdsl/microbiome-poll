@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 This poll was launched in May 2024 to better understand microbiome education, specifically focusing on the challenges and opportunities faced by instructors. The purpose of this poll was to gather insights and data that will support our efforts to promote equal access to microbiome training and resources.
 
-The first poll response was collected May 20, 2024. The collection is still ongoing as of 8/30/2024. To protect respondent anonymity, raw data is not yet available until approved by our IRB review.
+The first poll response was collected May 20, 2024. The collection is still ongoing as of 9/16/2024. To protect respondent anonymity, raw data is not yet available until approved by our IRB review.
 
 A blank version of the poll can be viewed [here](https://drive.google.com/file/d/134MgEsKRB3GohHQTUAdQMruNI3yXmIwF/view?usp=drive_link).
 
@@ -462,6 +462,7 @@ There might be some disagreement about what constitutes microbiome education at 
 * "Cost for supplies and sequencing if generating data and updating computers for analysis are both challenges at my institution."
 * "Paying for sequencing and knowing how to do the bioinformatics"
 * "They are listed above - finances and equipment"
+* "It is too expensive" 
 
 2. Instructor skills and confidence
 
@@ -498,7 +499,7 @@ Costs and time, either from the instructor themselves or lack of personnel or co
 
 _"Please provide any additional thoughts on your experience with microbiome education."_
 
-**Overall Barrier Themes**
+**Overall Thoughts Themes**
 
 There were fewer divisions among types of institutions. In general, respondents felt a lot of enthusiasm for the topic and for collaboration. There is some concern around how to implement microbiome content in the classroom, as well as expertise and time to make that happen.
 
@@ -710,3 +711,11 @@ words_dat %>%
     x = "Graduate institution"
   )
 ```
+
+# Notes
+
+> _Some thoughts for the authors: we could propose integrating into a microbiology lab course, or a short research project, students can focus on different microbiome systems (soil, viruses, archaea, etc), could propose fitting into a CURE. For example, if studying soil, could look at the virome or archaea in soil. Would be a good complement to lectures on microbiome that are part of microbiology course._
+
+> _might need to think about technical limitations for different -omes (fungal, bacterial..). DNA extraction might be an issue for experiments, depends on how many students, what interests, etc. Individual instructor will need to own it and decide what they are interested in, and how they can best incorporate it -- eg., give a fungi twist if that's what you're passionate about! Variety of ways to implement. Could divide up by time - first half of the semester is bact/archaea, while second half is others._
+
+> _Could be included in introductory biology lab as well. Termite gut, soil... half semester research project at VSU. **ACTION:** Xianfa could create a short write up about a microbiome education experience_
