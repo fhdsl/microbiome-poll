@@ -6,7 +6,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, out.width = "60%")
 ```
 
 # About
@@ -230,38 +230,90 @@ do_col_plot <- function(y_attribute) {
   )
   
 }
+
+# Function to create side by side column plots
+do_yn_plot <- function(y_attribute, legend_title) {
+  gg_rsch <-
+    clean_types_dat %>%
+    group_by(research_type, !!sym(y_attribute)) %>%
+    summarize(n = n()) %>%
+    group_by(research_type) %>% 
+    mutate(percent = n / sum(n) * 100) %>% 
+    ggplot(aes(x = research_type, y = percent, fill = !!sym(y_attribute))) +
+    geom_col() +
+    scale_fill_manual(values = c("#3b528b", "#5ec962", "gray70")) +
+    scale_x_discrete(
+      breaks = c("FALSE", "TRUE"),
+      labels = c(
+        "Primarily Undergraduate\n Institution",
+        "Graduate Research\n Institution"
+      )
+    ) +
+    labs(y = "% Respondents") +
+    theme_minimal() +
+    theme(legend.position = "none")
+  
+  gg_msi <-
+    clean_types_dat %>%
+    group_by(msi_type, !!sym(y_attribute)) %>%
+    summarize(n = n()) %>%
+    group_by(msi_type) %>% 
+    mutate(percent = n / sum(n) * 100) %>% 
+    ggplot(aes(x = msi_type, y = percent, fill = !!sym(y_attribute))) +
+    geom_col() +
+    scale_fill_manual(values = c("#3b528b", "#5ec962", "gray70")) +
+    scale_x_discrete(breaks = c("FALSE", "TRUE"),
+                     labels = c("Non-MSI", "MSI")) +
+    labs(y = "% Respondents") +
+    theme_minimal() +
+    theme(legend.position = "bottom",
+          legend.justification.bottom = "right")
+  
+  return(
+    gg_rsch + gg_msi &
+      labs(x = NULL,
+           fill = legend_title)
+  )
+  
+}
 ```
 
+<br>
 Are you familiar with microbiome research and its potential applications in public health, medicine, the environment, and industry?
 
 ```{r}
 do_col_plot("familiar") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
 ```
 
-Have you conducted microbiome research, previously or currently? (1 = yes)
+<br>
+Have you conducted microbiome research, previously or currently?
 
 ```{r}
-do_col_plot("done_research") & scale_y_continuous(limits = c(0, 1), oob = scales::oob_squish) 
+do_yn_plot("done_research", legend_title = "") # legend_title = "Have you conducted microbiome research, previously or currently?"
 ```
 
-Do you, or others at your institution, offer specific courses or educational programs for students related to microbiomes? (1 = yes)
+<br>
+Do you, or others at your institution, offer specific courses or educational programs for students related to microbiomes?
 
 ```{r}
-do_col_plot("offer_courses") & scale_y_continuous(limits = c(0, 1), oob = scales::oob_squish)
+do_yn_plot("offer_courses", legend_title = "") # legend_title = "Specific courses or educational programs for students related to microbiomes"
 ```
 
+<br>
 Would you be interested in collaborating with other institutions, organizations, or faculty to enhance microbiome education or research opportunities at your institution?
 
 ```{r}
 do_col_plot("want_collab") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
 ```
 
+<br>
 Do you believe that incorporating microbiome topics into the curriculum can provide students with interdisciplinary skills to address real-world problems?
 
 ```{r}
 do_col_plot("helps_students") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
 ```
 
+<br>
 # Responses: Institutional Barriers
 
 ## Institutional Barriers (separated)
@@ -270,59 +322,68 @@ The following are visualizations of institution types by each barrier. Note that
 
 _When implementing or considering implementing a module or course, please indicate the extent of each of the following challenges, where 1 is "not a challenge" and 5 is "a strong challenge"._
 
+<br>
 Confidence and/or expertise for teaching the material
 
 ```{r}
 do_col_plot("self_confidence") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
+<br>
 Opportunities for development and/or access to a community of practice
 
 ```{r}
 do_col_plot("dev_opportunities") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
+<br>
 Access to computers and/or computational time
 
 ```{r}
 do_col_plot("comp_access") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
+<br>
 Access to laboratory supplies to incorporate wet lab activities
 
 ```{r}
 do_col_plot("lab_access") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
+<br>
 Time and/or financial support needed to design and/or implement courses
 
 ```{r}
 do_col_plot("time_financial") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
+<br>
 Access to existing course materials
 
 ```{r}
 do_col_plot("materials_access") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
+<br>
 Freedom and/or flexibility to implement a course or module of your choosing
 
 ```{r}
 do_col_plot("course_freedom") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
+<br>
 Student interest and/or engagement
 
 ```{r}
 do_col_plot("student_interest") & scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
 
+<br>
 ## Institutional Barriers (aggregated)
 
 _When implementing or considering implementing a module or course, please indicate the extent of each of the following challenges, where 1 is "not a challenge" and 5 is "a strong challenge"._
 
-```{r fig.width=10}
+```{r}
 do_challenge_plot <- function() {
   rsch_dat<-
     clean_types_dat %>%
@@ -365,7 +426,96 @@ do_challenge_plot <- function() {
       name == "self_confidence" ~ "Confidence and/or expertise for\nteaching the material",
       name == "student_interest" ~ "Student interest and/or engagement",
       name == "time_financial" ~ "Time and/or financial support needed to\ndesign and/or implement courses"
-    )
+    ) 
+    ) %>% 
+    ggplot(aes(
+      x = forcats::fct_reorder(name, mean, .desc = T),
+      y = mean,
+      fill = type,
+      group = type
+    )) +
+    geom_col(position = position_dodge(width = 0.9)) +
+    theme(axis.text.x = element_text(angle = 30)) +
+    geom_errorbar(position = position_dodge(width = 0.9),
+                  aes(
+                    ymin = mean - sd,
+                    ymax = mean + sd,
+                    width = 0.4
+                  )) +
+    labs(x = NULL) +
+    scale_fill_manual(values = c("#21918c", "#3b528b", "#fde725", "#5ec962")) +
+    theme_minimal() +
+    theme(legend.title = element_blank(),
+          axis.text.x = element_text(angle = 50, hjust = 1),
+          plot.margin = unit(c(1,1,1,2), "cm"),
+          text = element_text(size = 7))
+  return(gg_out)
+}
+```
+
+```{r out.width="100%"}
+do_challenge_plot()
+```
+
+```{r eval = F}
+do_challenge_plot_binned <- function() {
+  rsch_dat<-
+    clean_types_dat %>%
+    select(7:14, research_type) %>%
+    pivot_longer(!research_type) %>%
+    mutate(name = case_when(
+      name == "self_confidence" ~ "instructor",
+      name == "dev_opportunities" ~ "instructor",
+      name == "materials_access" ~ "access",
+      name == "comp_access" ~ "access",
+      name == "lab_access" ~ "access",
+      name == "time_financial" ~ "time",
+      name == "course_freedom" ~ "institutional",
+      name == "student_interest" ~ "student"
+    )) %>% 
+    group_by(research_type, name) %>%
+    summarize(mean = mean(value), sd = sd(value)) %>%
+    mutate(type = case_when(
+       !research_type ~ "Primarily Undergraduate Institution",
+        research_type ~ "Graduate Research Institution"
+    ))
+  msi_dat<-
+    clean_types_dat %>%
+    select(7:14, msi_type) %>%
+    pivot_longer(!msi_type) %>%
+    mutate(name = case_when(
+      name == "self_confidence" ~ "instructor",
+      name == "dev_opportunities" ~ "instructor",
+      name == "materials_access" ~ "instructor",
+      name == "comp_access" ~ "institutional",
+      name == "lab_access" ~ "institutional",
+      name == "time_financial" ~ "institutional",
+      name == "course_freedom" ~ "institutional",
+      name == "student_interest" ~ "student"
+    )) %>% 
+    group_by(msi_type, name) %>%
+    summarize(mean = mean(value), sd = sd(value)) %>%
+    mutate(type = case_when(
+       !msi_type ~ "Non-MSI",
+        msi_type ~ "MSI"
+    ))
+  
+  gg_out <-
+    bind_rows(rsch_dat, msi_dat) %>%
+    mutate(type = factor(
+      type,
+      levels = c(
+        "Primarily Undergraduate Institution",
+        "Graduate Research Institution",
+        "Non-MSI",
+        "MSI"
+      )
+    )) %>%
+    mutate(name = case_when(
+      name == "institutional" ~ "Institutional access or lack of flexibility",
+      name == "instructor" ~ "Limited materials, confidence, or professional dev opps",
+      name == "student" ~ "Student interest and/or engagement"
+    ) 
     ) %>% 
     ggplot(aes(
       x = name,
@@ -392,6 +542,7 @@ do_challenge_plot <- function() {
 
 do_challenge_plot()
 ```
+
 
 # Statistics
 
