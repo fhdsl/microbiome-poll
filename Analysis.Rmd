@@ -619,67 +619,15 @@ do_challenge_plot()
 
 # Statistics
 
-## Chi-squared test: Have you conducted microbiome research, previously or currently?
+## Would you be interested in collaborating with other institutions, organizations, or faculty to enhance microbiome education or research opportunities at your institution?
 
-Is there a difference in the expected vs. predicted proportion of faculty who have done research, at MSI or Research Type? 
-
-```{r eval=FALSE}
-# Check out the grouping
-clean_types_dat %>%
-  group_by(msi_type, done_research) %>%
-  count() %>%
-  pivot_wider(names_from = done_research, values_from = n) 
-```
+Based on the outcome below, MSI faculty rank interest in collaborating higher.
 
 ```{r}
-M <- as.table(rbind(c(18, 31), c(16, 10)))
-dimnames(M) <- list(
-  type = c("non-MSI", "MSI"),
-  activity = c("Haven't done research", "Done research")
-)
-M
-chisq.test(M)
-# Could also do prop.test(x = c(18, 31), n = c(16+18, 31+10))
-```
-
-Is there a difference in the expected vs. predicted proportion of faculty who have done research, at PUI vs Graduate Research Institutions?
-
-```{r eval=FALSE}
-# Check out the grouping
-clean_types_dat %>% 
-  group_by(research_type, done_research) %>% 
-  count() %>% 
-  pivot_wider(names_from = done_research, values_from = n) 
-```
-
-```{r}
-M <- as.table(rbind(c(25, 21), c(9, 20)))
-dimnames(M) <- list(
-  type = c("PUI", "GRI"),
-  activity = c("Haven't done research", "Done research")
-)
-M
-chisq.test(M)
-```
-
-## Chi-squared test: Do you, or others at your institution, offer specific courses or educational programs for students related to microbiomes?
-
-Is there a difference in the expected vs. predicted proportion of institution types that offer courses?
-
-```{r eval=FALSE}
-# Check out the grouping
-clean_types_dat %>% 
-  group_by(research_type, offer_courses) %>% 
-  count() %>% 
-  pivot_wider(names_from = offer_courses, values_from = n) 
-```
-
-```{r}
-M <- as.table(rbind(c(24, 19), c(11, 17)))
-dimnames(M) <- list(type = c("PUI", "GRI"),
-                    activity = c("No courses", "Offer courses"))
-M
-chisq.test(M)
+t_msi <- clean_types_dat %>% filter(msi_type == TRUE) %>% pull(want_collab)
+t_nonmsi <- clean_types_dat %>% filter(msi_type == FALSE) %>% pull(want_collab)
+t.test(t_msi, t_nonmsi, alternative = "two.sided", var.equal = FALSE)
+wilcox.test(t_msi, t_nonmsi, alternative = "two.sided")
 ```
 
 ## Logistic Regression of Barriers
