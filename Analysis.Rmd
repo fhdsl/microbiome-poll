@@ -152,6 +152,10 @@ clean_types_dat <-
                                 hsi | tcu | nasnti | aanapisi | other_uri ~ TRUE, TRUE ~ FALSE))
 ```
 
+```{r}
+get_se <- function(x){sd(x, na.rm = T) / sqrt(length(na.omit(x)))}
+```
+
 <!-- Gut check below -->
 
 ```{r eval=FALSE}
@@ -222,8 +226,8 @@ do_col_plot <- function(y_attribute) {
   gg_rsch <-
     clean_types_dat %>%
     group_by(research_type) %>%
-    summarize(mean = mean(!!sym(y_attribute), na.rm = T),
-              sd = sd(!!sym(y_attribute), na.rm = T)) %>%
+    summarize(mean = mean(familiar, na.rm = T),
+              sd = get_se(familiar)) %>%
     ggplot(aes(x = research_type, y = mean)) +
     geom_col(fill = c("#21918c", "#3b528b")) +
     scale_x_discrete(
@@ -239,7 +243,7 @@ do_col_plot <- function(y_attribute) {
     clean_types_dat %>%
     group_by(msi_type) %>%
     summarize(mean = mean(!!sym(y_attribute), na.rm = T),
-              sd = sd(!!sym(y_attribute), na.rm = T)) %>%
+              sd = get_se(!!sym(y_attribute))) %>%
     ggplot(aes(x = msi_type, y = mean)) +
     geom_col(fill = c("#fde725", "#5ec962")) +
     scale_x_discrete(breaks = c("FALSE", "TRUE"),
@@ -310,7 +314,7 @@ do_col_plot_no_grouping <- function(y_attribute) {
   gg_all <-
     clean_types_dat %>%
     summarize(mean = mean(!!sym(y_attribute), na.rm = T),
-              sd = sd(!!sym(y_attribute), na.rm = T)) %>%
+              sd = get_se(!!sym(y_attribute))) %>%
     mutate(x = "All respondents") %>%
     ggplot(aes(x = x, y = mean)) +
     geom_col(fill = c("grey30"))
@@ -547,7 +551,7 @@ do_challenge_plot <- function() {
     select(7:14, research_type) %>%
     pivot_longer(!research_type) %>%
     group_by(research_type, name) %>%
-    summarize(mean = mean(value), sd = sd(value)) %>%
+    summarize(mean = mean(value), sd = get_se(value)) %>%
     mutate(
       type = case_when(
         !research_type ~ "Primarily Undergraduate Institution",
@@ -559,7 +563,7 @@ do_challenge_plot <- function() {
     select(7:14, msi_type) %>%
     pivot_longer(!msi_type) %>%
     group_by(msi_type, name) %>%
-    summarize(mean = mean(value), sd = sd(value)) %>%
+    summarize(mean = mean(value), sd = get_se(value)) %>%
     mutate(type = case_when(!msi_type ~ "Non-MSI", msi_type ~ "MSI"))
   
   gg_out <-
@@ -947,13 +951,13 @@ font_size_ <- 10
 p1 <-
   clean_types_dat %>%
   summarize(mean = mean(familiar, na.rm = T),
-            sd = sd(familiar, na.rm = T)) %>%
+            sd = get_se(familiar)) %>%
   mutate(y = "Are you familiar with microbiome research and its potential applications\nin public health, medicine, the environment, and industry?") %>%
   rbind(
     clean_types_dat %>%
       summarize(
         mean = mean(helps_students, na.rm = T),
-        sd = sd(helps_students, na.rm = T)
+        sd = get_se(helps_students)
       ) %>%
       mutate(y = "Do you believe that incorporating microbiome topics into the curriculum can\nprovide students with interdisciplinary skills to address real-world problems?")
   ) %>%
@@ -1075,7 +1079,7 @@ p3 <-
 p4 <- clean_types_dat %>%
   group_by(research_type) %>%
   summarize(mean = mean(want_collab, na.rm = T),
-            sd = sd(want_collab, na.rm = T)) %>%
+            sd = get_se(want_collab)) %>%
   mutate(
     facet = "Research type",
     type = case_when(
@@ -1088,7 +1092,7 @@ p4 <- clean_types_dat %>%
       group_by(msi_type) %>%
       summarize(
         mean = mean(want_collab, na.rm = T),
-        sd = sd(want_collab, na.rm = T)
+        sd = get_se(want_collab)
       ) %>%
       mutate(
         facet = "MSI type",
@@ -1099,7 +1103,7 @@ p4 <- clean_types_dat %>%
     clean_types_dat %>%
       summarize(
         mean = mean(want_collab, na.rm = T),
-        sd = sd(want_collab, na.rm = T)
+        sd = get_se(want_collab)
       ) %>%
       mutate(facet = " ", type =  "Would you be interested in collaborating with other institutions,\norganizations, or faculty to enhance microbiome education or research\nopportunities at your institution? (All Respondents)")
   ) %>%
@@ -1142,7 +1146,7 @@ rsch_dat <-
   select(7:14, research_type) %>%
   pivot_longer(!research_type) %>%
   group_by(research_type, name) %>%
-  summarize(mean = mean(value), sd = sd(value)) %>%
+  summarize(mean = mean(value), sd = get_se(value)) %>%
   mutate(
     type = case_when(
       !research_type ~ "Primarily Undergraduate Institution",
@@ -1154,7 +1158,7 @@ msi_dat <-
   select(7:14, msi_type) %>%
   pivot_longer(!msi_type) %>%
   group_by(msi_type, name) %>%
-  summarize(mean = mean(value), sd = sd(value)) %>%
+  summarize(mean = mean(value), sd = get_se(value)) %>%
   mutate(type = case_when(!msi_type ~ "Non-MSI", msi_type ~ "MSI"))
 
 gg_out <-
