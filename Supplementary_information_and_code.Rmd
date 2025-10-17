@@ -4,11 +4,11 @@ subtitle: 'Supplementary Information'
 bibliography: references.bib
 csl: style.csl
 output:
+  pdf_document:
+    toc: true
   html_document:
     toc: true
     number_sections: true
-  pdf_document:
-    toc: true
 ---
 
 ```{r setup, include=FALSE}
