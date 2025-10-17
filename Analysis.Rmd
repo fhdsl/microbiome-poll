@@ -1,5 +1,6 @@
 ---
-title: "Microbiome Education Poll Data Analysis - Supplementary Information"
+title: Microbiome education at under-resourced institutions: current status, barriers, and approaches to successful implementation 
+subtitle: Supplementary Information
 output:
   pdf_document:
     toc: true
