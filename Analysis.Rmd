@@ -236,7 +236,7 @@ do_col_plot <- function(y_attribute, research = T) {
           !research_type ~ "Primarily\nUndergraduate\n Institution"
         )
       )
-  } else{
+  } else {
     # Get subset broken down by msi_type
     gg_dat <-
       clean_types_dat %>%
@@ -268,74 +268,46 @@ do_col_plot <- function(y_attribute, research = T) {
 }
 
 # Function to create side by side column plots, with a yes/no binary response
-do_yn_plot <- function(y_attribute, legend_title) {
-  # Get subset broken down by research_type
-  gg_rsch <-
-    clean_types_dat %>%
-    group_by(research_type, done_research) %>%
-    summarize(n = n()) %>%
-    group_by(research_type) %>%
-    mutate(percent = n / sum(n) * 100) %>%
-    mutate(
-      type = case_when(
-        research_type ~ "Graduate\nResearch\n Institution",
-        !research_type ~ "Primarily\nUndergraduate\n Institution"
+do_yn_plot <- function(y_attribute, research = T) {
+  if (research) {
+    # Get subset broken down by research_type
+    gg_dat <-
+      clean_types_dat %>%
+      group_by(research_type, !!sym(y_attribute)) %>%
+      summarize(n = n()) %>%
+      group_by(research_type) %>%
+      mutate(percent = n / sum(n) * 100) %>%
+      mutate(
+        type = case_when(
+          research_type ~ "Graduate\nResearch\n Institution",
+          !research_type ~ "Primarily\nUndergraduate\n Institution"
+        )
       )
-    ) %>%
-    ungroup() %>% 
-    select(!research_type) %>% 
-    mutate(facet_lab = "Research Type")
-    
-  gg_msi <-
-    clean_types_dat %>%
-    group_by(research_type, done_research) %>%
-    summarize(n = n()) %>%
-    group_by(research_type) %>%
-    mutate(percent = n / sum(n) * 100) %>%
-    mutate(type = case_when(msi_type ~ "MSI", !msi_type ~ "Non-MSI")) %>% 
-    ungroup() %>% 
-    select(!research_type) %>% 
-    mutate(facet_lab = "MSI Type")
-    
-    
+  } else {
+    # Get subset broken down by msi_type
+    gg_dat <-
+      clean_types_dat %>%
+      group_by(msi_type, !!sym(y_attribute)) %>%
+      summarize(n = n()) %>%
+      group_by(msi_type) %>%
+      mutate(percent = n / sum(n) * 100) %>%
+      mutate(type = case_when(msi_type ~ "MSI", !msi_type ~ "Non-MSI"))
+  }
+  
   gg_out <-
-    bind_rows(gg_rsch, gg_msi) %>% 
+    gg_dat %>%
     ggplot(aes(x = type, y = percent, fill = !!sym(y_attribute))) +
     geom_col() +
     scale_fill_manual(values = c("#3b528b", "#5ec962", "gray70")) +
-    scale_x_discrete(
-      breaks = c("FALSE", "TRUE"),
-      labels = c(
-        "Primarily\nUndergraduate\n Institution",
-        "Graduate\nResearch\n Institution"
-      )
-    ) +
-    labs(y = "% Respondents") +
+    labs(y = "% Respondents", x = NULL) +
     theme_minimal() +
-    theme(legend.position = "none")
+    theme(
+      legend.justification.bottom = "right",
+      legend.title = element_blank()
+    )
   
-  # Get subset broken down by msi_type
-  gg_msi <-
-    clean_types_dat %>%
-    group_by(msi_type, !!sym(y_attribute)) %>%
-    summarize(n = n()) %>%
-    group_by(msi_type) %>% 
-    mutate(percent = n / sum(n) * 100) %>% 
-    ggplot(aes(x = msi_type, y = percent, fill = !!sym(y_attribute))) +
-    geom_col() +
-    scale_fill_manual(values = c("#3b528b", "#5ec962", "gray70")) +
-    scale_x_discrete(breaks = c("FALSE", "TRUE"),
-                     labels = c("Non-MSI", "MSI")) +
-    labs(y = "% Respondents") +
-    theme_minimal() +
-    theme(legend.position = "bottom",
-          legend.justification.bottom = "right")
+  return(gg_out)
   
-  return(
-    gg_rsch + gg_msi &
-      labs(x = NULL,
-           fill = legend_title)
-  )
 }
 
 # Equivalent of do_col_plot but don't break it down by research type or msi type
@@ -359,7 +331,7 @@ do_col_plot_no_grouping <- function(y_attribute) {
 }
 
 # Equivalent of do_yn_plot but don't break it down by research type or msi type
-do_yn_plot_no_grouping <- function(y_attribute, legend_title) {
+do_yn_plot_no_grouping <- function(y_attribute) {
   gg_all <-
     clean_types_dat %>%
     group_by(!!sym(y_attribute)) %>%
@@ -373,19 +345,30 @@ do_yn_plot_no_grouping <- function(y_attribute, legend_title) {
     )) +
     geom_col() +
     scale_fill_manual(values = c("#3b528b", "#5ec962", "gray70")) +
-    labs(y = "% Respondents") +
+    labs(y = "% Respondents", x = NULL) +
     theme_minimal() +
-    theme(legend.position = "bottom",
-          legend.justification.bottom = "right")
+    theme(
+      legend.justification.bottom = "right",
+      legend.title = element_blank(),
+      legend.position = "bottom"
+    )
   
-  return(gg_all &
-           labs(x = NULL, fill = legend_title))
+  return(gg_all)
 }
 
 compile_col_plot <- function(y_attribute){
   p1 <- do_col_plot(y_attribute)
   p2 <- do_col_plot(y_attribute, research = F)
   p3 <- do_col_plot_no_grouping(y_attribute)
+  return(
+    p1 + p2 + p3
+  )
+}
+
+compile_yn_plot <- function(y_attribute){
+  p1 <- do_yn_plot(y_attribute) + theme(legend.position = "none")
+  p2 <- do_yn_plot(y_attribute, research = F) + theme(legend.position = "none")
+  p3 <- do_yn_plot_no_grouping(y_attribute)
   return(
     p1 + p2 + p3
   )
@@ -410,8 +393,8 @@ clean_types_dat %>%
 
 ***Have you conducted microbiome research, previously or currently***
 
-```{r eval=FALSE}
-do_yn_plot("done_research", legend_title = "")
+```{r}
+compile_yn_plot("done_research")
 ```
 
 ```{r eval=FALSE}
@@ -436,8 +419,8 @@ clean_types_dat %>%
 
 ***Do you, or others at your institution, offer specific courses or educational programs for students related to microbiomes?***
 
-```{r eval=FALSE}
-do_yn_plot("offer_courses", legend_title = "")
+```{r}
+compile_yn_plot("offer_courses")
 ```
 
 ```{r eval=FALSE}
