@@ -1,21 +1,55 @@
 ---
-title: Microbiome education at under-resourced institutions: current status, barriers, and approaches to successful implementation 
-subtitle: Supplementary Information
+title: 'Microbiome education at under-resourced institutions: current status, barriers, and approaches to successful implementation' 
+subtitle: 'Supplementary Information'
+bibliography: references.bib
+csl: style.csl
 output:
-  pdf_document:
-    toc: true
   html_document:
     toc: true
     number_sections: true
+  pdf_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, out.width = "60%")
 ```
 
-# Vignettes
+# Vignettes of Microbiome Education Across Institutions
 
+## Skin Microbiome Extra Credit Assignment, Northern Virginia Community College
 
+The Introductory General Biology course at Northern Virginia Community College is a popular laboratory science choice for students of all backgrounds. It fulfills a science laboratory course requirement for an associate’s degree and transfer to a four-year college/university. This semester-long course focuses on cells and gene expression, with curriculum standardized by the Commonwealth of Virginia and established to create introductory course equivalency at all public higher education schools in Virginia. While genomics is only briefly introduced, the skin microbiome module based on NHGRI’s Microbiome Virtual Lab Exploration @fuller_microbiome_2021 fits well into existing course material.
+
+To bolster student participation, an extra credit assignment is offered as a group assignment and students collectively read a journal article, navigated NCBI’s BLAST website @altschul_basic_1990, and ultimately identified the bacteria in a simulated unknown skin bacterium sample. Though the students did not perform isolation and sequencing, the activity allowed them for greater understanding of 16S bacterial signatures and the confidence with which they could identify a species. Ideally, future iterations of this assignment will include collecting skin samples and using Nanopore sequencing for students interested in the wet-lab components required to generate data.
+
+## Fruit fly gut microbiome module, Guttman Community College
+
+The fruit fly gut microbiome module is an 8 week research module that bridges a 200-level microbiology class and a 200-level genetics course at Guttman Community College. The 200-level microbiology class is a capstone for the Science A.S. degree, with a writing-intensive requirement, and thus, lends itself well to independent research projects, as students have time to do sufficient literature searches and a culminating written journal article-style research report. Students use ethnographic family interviews to hypothesize which normal pantry staples might have probiotic effects. Using Drosophila melanogaster as a model organism, students replace yeast fly feed with an equivalent amount of the test food. From here the project is split into 2 avenues, the microbiology students smash the flies and plate the samples on MSR agar plates. The MSR plates allow them to quantify Lactobacillus, a beneficial bacterium in the fly gut. DNA extractions from the colonies on LB agar plates are purified and shared with the genetics research course. These samples will be analyzed by shotgun sequencing, using EPI2ME software to mine the data for Lactobacillus. Splitting the project between two classes, not only maximizes material and sample usage, but also introduces students to the real-life nature of science through collaboration, relying on previous research and making clear and concise data reports that can be followed by future researchers. 
+
+## Monitoring Environmental Microbiome (MEM) workshop, Fort Lewis College
+
+This week-long workshop offered in the summer engages undergraduate students on the effect of environmental pollution on sediment and water microbiomes @lee_monitoring_2025. Local EPA superfund sites are used to examine the effect of acid mine drainage, metal content and pH on the microbiome. Students develop an appreciation for the history of the sites and visit the collection sites. The Indigenous instructor uses a cultural integration and responsive curriculum as a driver for strong student engagement. Previously generated 16S amplicon data or newly generated sequence data is analyzed during the course of the week-long workshop which culminates with student presentations. While the key learning objectives focused on installation of tools or cloud computing (CyVerse VICE or Galaxy/ANVIL) and data analysis with QIIME 2 @bolyen_reproducible_2019, different iterations of the workshop have emphasized data management, data types, algorithms, documenting (Jupyter Notebook), circling back to research question, interfaces of cloud computing, visualization or interpretation of results. Implementation of the workshop required access to computing power (memory intensive) freely available through CyVerse and molecular biology reagents and sequencing services whenever these were integrated in the design of the workshop. The workshop is currently being redeveloped as a Biochemistry course-based undergraduate research experience (CURE).
+
+## Introduction to Bioinformatics and Data Science, University of Puerto Rico–Ponce
+
+The Introduction to Bioinformatics and Data Science course is offered as a regular semester long course or as a 4-week intensive course during winter break through the RISE program at the University of Puerto Rico-Ponce. The first section of the course provides an introduction to statistical analysis and programming using R. This foundational knowledge allows students to dive into bioinformatics and microbiome analysis. First, students construct microbiome taxonomy and abundance tables from cleaned data via QIIME 2 @bolyen_reproducible_2019. With these tables and metadata in hand, students use MicrobiomeAnalyst (https://www.microbiomeanalyst.ca/) to test hypotheses, including drawing connections between taxonomic abundance and variables of interest, such as BMI, smoking status, alcohol consumption, and family risk factors. Students work together to compare their results. To supplement expertise in microbiome data analysis, the course was developed with a collaborator at a different institution (George Washington University).
+
+## Microbiomes CURE, Spelman College
+
+Bio334-Microbiomes is a research-based course designed to provide both hands-on experiences and computational experiences.The course is intended to be a gateway to upper-level undergraduate research courses offered by several faculty members in the department. The study site, the Spelman Gardens, was established over a hundred years ago and served as Victory Gardens during World War I and II. As students learn about the history of the site and acquire background knowledge on microbiomes, they start to develop and refine their research questions.
+
+Typically, their investigations involve two phases. The first phase involves the isolation of bacteria followed by DNA extraction, library preparation and Nanopore sequencing. Bioinformatic pipelines are run on Galaxy (genome assembly with Flye, genome polishing with Racon, species identification with Kraken2, and search for Biosynthetic Gene Clusters with antiSMASH) @blin_antismash_2025;@kolmogorov_assembly_2019;@the_galaxy_community_galaxy_2024;@vaser_fast_2017;@wood_improved_2019. The second phase involves the analysis of metagenomic data and assessment of bacterial interactions (alpha and beta diversities, taxonomic analysis and data visualization with R, and cross-streak assays). Thus, during the semester, students progress from ‘think microbe’ to ‘think microbiome’. The lectures, journal club style presentations and hands-on activities were supplemented by external speakers.
+
+The use of Nanopore sequencing required access to funds for reagents and supplies. In addition, the implementation of this CURE required some anticipation and planning in case of technical difficulties, especially during DNA extraction (e.g. lengthy protocol, low yield). These can be circumvented by either providing open lab hours or by providing back-up samples. Overall, the continuum between the research site, the research questions, the hands-on activities, the bioinformatic and statistical analysis provided for an integrated learning experience. Such an experience was particularly viewed by the faculty as important for re-engaging students post-covid.
+
+## Soil and termite gut microbiomes for capstone research course, Virginia State University
+
+All biology major undergraduate students at the Virginia State University are required to complete one semester of research through the capstone Investigations and Research course (BIOL446). On average at least one section of this course each year has been developed for soil and termite gut microbiomes study. This course introduces the whole process from sample collections to data analysis. For the project, students start with termite collections in their natural habitats in easily accessible areas and soil sample collections at the same sites where termites are collected in order to study the relationship between termite gut microbiomes and their soil environment microbiomes. In the lab, students would dissect out termite guts and extract microbial genomic DNAs and in parallel, the soil genomic DNAs. After evaluating the quality of gDNA extractions, the students would continue with PCR amplification of the 16S rRNA marker and proceed with library preparation for paired-end sequencing with Illumina MiSeq. Upon the collection of the raw sequencing data, the students would demultiplex and denoise the data and characterize the taxonomic compositions, calculate both alpha and beta diversity, and conduct differential abundance analysis mostly using QIIME2 and RDPTools @bolyen_reproducible_2019;@cole_ribosomal_2014 in a Linux command-line environment. Microbial taxonomy identification would also be visualized in Krona @ondov_interactive_2011. With metagenomic data generated from in-house Nanopore sequencers, students would conduct taxonomic classification with kraken2 @wood_improved_2019 and R packages, metagenomic assembly using metaFlye @kolmogorov_metaflye_2020, upon which genes involved in cellulose degradation are identified using FragGeneScan @rho_fraggenescan_2010, the CAZy database @lombard_carbohydrate-active_2014, hmmscan @finn_hmmer_2011, and other programs.
+
+## BioDIGS miniCURE, Notre Dame of Maryland University
+
+The BioDIGS miniCURE is a 5-week modular course-based undergraduate research experience embedded in the BIO340 Microbiology Lab at Notre Dame of Maryland University. The miniCURE introduces students to whole genome metagenomics data generated by the BioDIGS consortium (biodigs.org) which researches soil biodiversity and ecological factors that impact human health and ecological concerns. Students analyze the microbiome data for microbial diversity and screen for antibiotic resistance genes using Galaxy @the_galaxy_community_galaxy_2024 with established tools, such as Kraken2 @wood_improved_2019 and ABRicate @seemann_abricate_2020. A mixture of junior and senior students typically take this class as part of the Biology major curriculum with no coding experience required. Students who complete this work create an independent project poster in class that may use more BioDIGS data and/or other public metagenomics data from the NCBI Sequence Read Archive @leinonen_sequence_2011.
 
 # Basic Poll Information
 
@@ -1229,3 +1263,6 @@ ggsave(
 sessionInfo()
 ```
 
+<br>
+
+# References
