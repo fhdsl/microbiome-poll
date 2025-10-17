@@ -14,11 +14,11 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, out.width 
 
 # About
 
+# Basic Poll Information
+
 This poll was launched in May 2024 to better understand microbiome education, specifically focusing on the challenges and opportunities faced by instructors. The purpose of this poll was to gather insights and data that will support our efforts to promote equal access to microbiome training and resources.
 
 The first poll response was collected May 20, 2024. A blank version of the poll can be viewed [here](https://drive.google.com/file/d/134MgEsKRB3GohHQTUAdQMruNI3yXmIwF/view?usp=drive_link). All code associated with this project can be found [on GitHub](https://github.com/fhdsl/microbiome-poll).
-
-# Basic Information
 
 <!-- Setting up and cleaning the data in the chunk below -->
 
@@ -219,7 +219,7 @@ kableExtra::kable(msi_breakdown, align = "lrr") %>%
 
 # Responses: General Poll Questions
 
-```{r}
+```{r eval=FALSE}
 # Function to create side by side column plots
 do_col_plot <- function(y_attribute) {
   # Get subset broken down by research_type
@@ -250,6 +250,7 @@ do_col_plot <- function(y_attribute) {
                      labels = c("Non-MSI", "MSI"))
   
   return(
+    require(patchwork)
     gg_rsch + gg_msi &
       theme(legend.position = "none") &
       geom_errorbar(aes(
@@ -303,6 +304,7 @@ do_yn_plot <- function(y_attribute, legend_title) {
           legend.justification.bottom = "right")
   
   return(
+    require(patchwork)
     gg_rsch + gg_msi &
       labs(x = NULL,
            fill = legend_title)
@@ -361,7 +363,7 @@ do_yn_plot_no_grouping <- function(y_attribute, legend_title) {
 
 ## Are you familiar with microbiome research and its potential applications in public health, medicine, the environment, and industry?
 
-```{r}
+```{r eval=FALSE}
 p1 <- do_col_plot("familiar") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 p2 <- do_col_plot_no_grouping("familiar")
@@ -378,7 +380,7 @@ clean_types_dat %>%
 
 ## Have you conducted microbiome research, previously or currently?
 
-```{r}
+```{r eval=FALSE}
 do_yn_plot("done_research", legend_title = "")
 ```
 
@@ -404,7 +406,7 @@ clean_types_dat %>%
 
 ## Do you, or others at your institution, offer specific courses or educational programs for students related to microbiomes?
 
-```{r}
+```{r eval=FALSE}
 do_yn_plot("offer_courses", legend_title = "")
 ```
 
@@ -425,7 +427,7 @@ clean_types_dat %>%
 
 ## Would you be interested in collaborating with other institutions, organizations, or faculty to enhance microbiome education or research opportunities at your institution?
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("want_collab") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
 ```
@@ -440,7 +442,7 @@ clean_types_dat %>%
 
 ## Do you believe that incorporating microbiome topics into the curriculum can provide students with interdisciplinary skills to address real-world problems?
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("helps_students") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish) 
 ```
@@ -469,7 +471,7 @@ _When implementing or considering implementing a module or course, please indica
 
 ### Confidence and/or expertise for teaching the material
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("self_confidence") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
@@ -478,7 +480,7 @@ do_col_plot("self_confidence") &
 
 ### Opportunities for development and/or access to a community of practice
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("dev_opportunities") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
@@ -487,7 +489,7 @@ do_col_plot("dev_opportunities") &
 
 ### Access to computers and/or computational time
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("comp_access") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
@@ -496,7 +498,7 @@ do_col_plot("comp_access") &
 
 ### Access to laboratory supplies to incorporate wet lab activities
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("lab_access") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
@@ -505,7 +507,7 @@ do_col_plot("lab_access") &
 
 ### Time and/or financial support needed to design and/or implement courses
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("time_financial") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
@@ -514,7 +516,7 @@ do_col_plot("time_financial") &
 
 ### Access to existing course materials
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("materials_access") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
@@ -523,7 +525,7 @@ do_col_plot("materials_access") &
 
 ### Freedom and/or flexibility to implement a course or module of your choosing
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("course_freedom") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
@@ -532,7 +534,7 @@ do_col_plot("course_freedom") &
 
 ### Student interest and/or engagement
 
-```{r}
+```{r eval=FALSE}
 do_col_plot("student_interest") &
   scale_y_continuous(limits = c(0, 5), oob = scales::oob_squish)
 ```
