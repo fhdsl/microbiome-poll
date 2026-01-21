@@ -4,16 +4,64 @@ subtitle: 'Supplementary Information'
 bibliography: references.bib
 csl: style.csl
 output:
-  pdf_document:
-    toc: true
   html_document:
     toc: true
     number_sections: true
+  pdf_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, out.width = "60%")
 ```
+
+\makeatletter
+\renewcommand \thesection{S\@arabic\c@section}
+\renewcommand\thetable{S\@arabic\c@table}
+\renewcommand \thefigure{S\@arabic\c@figure}
+\makeatother
+
+# Table S1
+
+Relevant bioinformatics curriculum core competencies from the International Society of Computational Biology (ICSB, https://competency.ebi.ac.uk/framework/iscb/2.0) and Network for Integrating Bioinformatics into Life Sciences Education (NIBLSE) core competencies (Wilson Sayres et al. 2018; Mulder et al. 2018). These focal areas allow for more in depth exploration of the bioinformatics component of microbiome education. **Note that table may appear on the next page.**
+
+\begin{table}[]
+\begin{tabular}{p{0.2\linewidth} | p{0.7\linewidth}}
+\toprule
+\multicolumn{2}{c}{\textbf{Molecular Biology and Microbiology}} \\
+\midrule
+ICSB & A. General biology \\ 
+ & B. Depth in at least one area of biology (e.g., evolutionary biology, genetics, molecular biology, biochemistry, anatomy, physiology) \\
+ & C. Biological data generation technologies \\
+ & D. Details of the scientific discovery process and of the role of bioinformatics in it. \\
+\midrule
+NIBLSE & S1. Understand the role of computation and data mining in hypothesis-driven processes within the life sciences \\ 
+\midrule
+\multicolumn{2}{c}{\textbf{Networking and Communication}} \\
+\midrule
+ICSB & N. Effective communication of bioinformatics and genomics problems/issues/topics with a range of audiences, including, but not limited to, other bioinformatics professionals \\ 
+ & O. Effective teamwork to accomplish a common scientific goal \\
+\midrule
+\multicolumn{2}{c}{\textbf{Computational Data Science Skills}} \\
+\midrule
+ICSB & E. Statistical research methods in the context of molecular biology, genomics, medical, and population genetics research \\ 
+ & F. Bioinformatics tools and their usage \\
+ & G. The ability of a computer-based system, process, algorithm, component, or program to meet desired needs in scientific environments/problems \\
+ & H. Computing requirements appropriate to solve a given scientific problem (e.g. system, process, algorithm, component or program; define algorithmic time and space complexities and hardware resources required to solve a problem) \\
+ & I. GUI/Web-based computing skills appropriate to the discipline  (e.g. effectively use bioinformatics and analysis tools through web) \\
+ & J. Command line and scripting-based computing skills appropriate to the discipline \\
+\midrule
+NIBLSE & S2. Understand computational concepts used in bioinformatics, e.g., meaning of algorithm, bioinformatics file formats \\ 
+ & S3. Know statistical concepts used in bioinformatics \\
+ & S4. Know how to access genomic data \\
+ & S5 .Be able to use bioinformatics tools to analyze genomic data \\
+ & S13. Know how to write short computer programs as part of the scientific discovery process \\
+ & S14. Be able to use software packages to manipulate and analyze bioinformatics data \\
+ & S15. Operate in a variety of computational environments to manipulate and analyze bioinformatics data \\
+\bottomrule
+\end{tabular}
+\caption{Relevant bioinformatics curriculum core competencies from the International Society of Computational Biology.}
+\end{table}
 
 # Vignettes of Microbiome Education Across Institutions
 
