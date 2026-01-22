@@ -1036,6 +1036,10 @@ Please see the repository: https://github.com/fhdsl/microbiome-poll for rendered
 font_size_ <- 10
 
 #####
+p1_labels <- c(
+  `Are you familiar with microbiome research and its potential applications\nin public health, medicine, the environment, and industry?` = "All respondents",
+  `Do you believe that incorporating microbiome topics into the curriculum can\nprovide students with interdisciplinary skills to address real-world problems?` = "All respondents"
+)
 p1 <-
   clean_types_dat %>%
   summarize(mean = mean(familiar, na.rm = T),
@@ -1056,10 +1060,17 @@ p1 <-
     xmax = mean + sd,
     width = 0.4
   )) +
+  facet_wrap( ~ y,
+              scales = "free_y",
+              nrow = 3,
+              strip.position = "right",
+              labeller = labeller(.default = p1_labels)) +
   labs(x = NULL, y = NULL) +
+  scale_x_continuous(limits = c(0,5)) +
   theme_minimal() +
   theme(legend.position = "none",
-        axis.text = element_text(size = font_size_))
+        axis.text = element_text(size = font_size_),
+        strip.text.y.right = element_text(angle = 0))
 #####
 p2 <-
   clean_types_dat %>%
@@ -1068,7 +1079,7 @@ p2 <-
   group_by(research_type) %>%
   mutate(
     percent = n / sum(n) * 100,
-    facet = "Research type",
+    facet = "By Research type",
     type = case_when(
       research_type ~ "Graduate Research Institution",
       !research_type ~ "Primarily Undergraduate Institution"
@@ -1081,7 +1092,7 @@ p2 <-
       group_by(msi_type) %>%
       mutate(
         percent = n / sum(n) * 100,
-        facet = "MSI type",
+        facet = "By MSI type",
         type = case_when(msi_type ~ "MSI", !msi_type ~ "non-MSI")
       )
   ) %>%
@@ -1091,7 +1102,7 @@ p2 <-
       summarize(n = n()) %>%
       mutate(
         percent = n / sum(n) * 100,
-        facet = " ",
+        facet = "All respondents",
         type = "Do you, or others at your institution, offer specific\ncourses or educational programs for students related\nto microbiomes? (All Respondents)"
       )
   ) %>%
@@ -1111,7 +1122,7 @@ p2 <-
     axis.text = element_text(size = font_size_)
   ) +
   labs(y = NULL, fill = "")
-
+#####
 p3 <-
   clean_types_dat %>%
   group_by(research_type, done_research) %>%
@@ -1119,7 +1130,7 @@ p3 <-
   group_by(research_type) %>%
   mutate(
     percent = n / sum(n) * 100,
-    facet = "Research type",
+    facet = "By Research type",
     type = case_when(
       research_type ~ "Graduate Research Institution",
       !research_type ~ "Primarily Undergraduate Institution"
@@ -1132,7 +1143,7 @@ p3 <-
       group_by(msi_type) %>%
       mutate(
         percent = n / sum(n) * 100,
-        facet = "MSI type",
+        facet = "By MSI type",
         type = case_when(msi_type ~ "MSI", !msi_type ~ "non-MSI")
       )
   ) %>%
@@ -1142,7 +1153,7 @@ p3 <-
       summarize(n = n()) %>%
       mutate(
         percent = n / sum(n) * 100,
-        facet = " ",
+        facet = "All respondents",
         type = "Have you conducted microbiome research,\npreviously or currently? (All Respondents)"
       )
   ) %>%
@@ -1169,7 +1180,7 @@ p4 <- clean_types_dat %>%
   summarize(mean = mean(want_collab, na.rm = T),
             sd = get_se(want_collab)) %>%
   mutate(
-    facet = "Research type",
+    facet = "By Research type",
     type = case_when(
       research_type ~ "Graduate Research Institution",
       !research_type ~ "Primarily Undergraduate Institution"
@@ -1183,7 +1194,7 @@ p4 <- clean_types_dat %>%
         sd = get_se(want_collab)
       ) %>%
       mutate(
-        facet = "MSI type",
+        facet = "By MSI type",
         type = case_when(msi_type ~ "MSI", !msi_type ~ "non-MSI")
       )
   ) %>%
@@ -1193,7 +1204,7 @@ p4 <- clean_types_dat %>%
         mean = mean(want_collab, na.rm = T),
         sd = get_se(want_collab)
       ) %>%
-      mutate(facet = " ", type =  "Would you be interested in collaborating with other institutions,\norganizations, or faculty to enhance microbiome education or research\nopportunities at your institution? (All Respondents)")
+      mutate(facet = "All respondents", type =  "Would you be interested in collaborating with other institutions,\norganizations, or faculty to enhance microbiome education or research\nopportunities at your institution? (All Respondents)")
   ) %>%
   ggplot(aes(x = mean, y = type)) +
   geom_col(fill = c("grey30")) +
