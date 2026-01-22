@@ -4,11 +4,16 @@ subtitle: 'Supplementary Information'
 bibliography: references.bib
 csl: style.csl
 output:
+  pdf_document:
+    toc: true
   html_document:
     toc: true
     number_sections: true
-  pdf_document:
-    toc: true
+header-includes:
+  - \usepackage{fancyhdr}
+  - \pagestyle{fancy}
+  - \fancyhead[R]{Supplementary Information}
+  - \fancyhead[L,C]{ }
 ---
 
 ```{r setup, include=FALSE}
