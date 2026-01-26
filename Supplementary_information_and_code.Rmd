@@ -1322,7 +1322,7 @@ gg_out
 
 ggsave(
   "figures/fig3.png",
-  height = 5,
+  height = 4.5,
   width = 8,
   units = "in"
 )
