@@ -724,8 +724,14 @@ Based on the outcome below, MSI faculty rank interest in collaborating higher.
 t_msi <- clean_types_dat %>% filter(msi_type == TRUE) %>% pull(want_collab)
 t_nonmsi <- clean_types_dat %>% filter(msi_type == FALSE) %>% pull(want_collab)
 t.test(t_msi, t_nonmsi, alternative = "two.sided", var.equal = FALSE)
+```
+
+Wilcoxon test included below for comparison/robustness, results agree with above.
+
+```{r}
 wilcox.test(t_msi, t_nonmsi, alternative = "two.sided")
 ```
+
 
 ## Logistic Regression of Barriers
 
@@ -1305,6 +1311,7 @@ gg_out <-
   labs(x = NULL, y = "Mean response") +
   scale_fill_manual(values = c("#21918c", "#3b528b", "#fde725", "#5ec962")) +
   theme_minimal() +
+  scale_y_continuous(limits = c(0,5)) +
   theme(
     legend.title = element_blank(),
     axis.text.x = element_text(angle = 50, hjust = 1),
@@ -1315,8 +1322,8 @@ gg_out
 
 ggsave(
   "figures/fig3.png",
-  height = 3,
-  width = 7,
+  height = 5,
+  width = 8,
   units = "in"
 )
 ```
