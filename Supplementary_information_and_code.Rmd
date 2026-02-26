@@ -1242,10 +1242,12 @@ p4 <- clean_types_dat %>%
 p1 + p2 + p3 + p4 + plot_layout(ncol = 1, heights = c(1.5, 2, 2, 2)) + plot_annotation(tag_levels = 'A')
 
 ggsave(
-  "figures/fig2.png",
+  "figures/fig2.tiff",
   height = 9,
   width = 8,
-  units = "in"
+  units = "in",
+  dpi = "print",
+  device = "tiff"
 )
 ```
 
@@ -1323,10 +1325,12 @@ gg_out <-
 gg_out
 
 ggsave(
-  "figures/fig3.png",
+  "figures/fig3.tiff",
   height = 4.5,
   width = 8,
-  units = "in"
+  units = "in",
+  dpi = "print",
+  device = "tiff"
 )
 ```
 
